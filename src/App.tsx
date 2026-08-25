@@ -5,10 +5,51 @@ import TranscriptSignPlayer from './components/TranscriptSignPlayer'
 import type { TranscriptSegment } from './components/TranscriptSignPlayer'
 import { parseTranscript } from './lib/transcript'
 import { translateToSign } from './lib/signTranslate'
+import { processPoseBlob } from './lib/poseProcess'
 
 type Phase = 'upload' | 'generating' | 'player'
 
 const SEGMENT_DELAY_MS = 300
+const MAX_ATTEMPTS = 3
+const RETRY_DELAYS_MS = [500, 1000]
+
+function sleep(ms: number) {
+  return new Promise<void>(resolve => setTimeout(resolve, ms))
+}
+
+interface TranslateSuccess {
+  ok: true
+  blob: Blob
+}
+
+interface TranslateFailure {
+  ok: false
+  error: unknown
+}
+
+async function translateSegmentWithRetry(
+  text: string,
+  onRetryStart?: (attempt: number) => void
+): Promise<TranslateSuccess | TranslateFailure> {
+  let lastError: unknown
+  for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
+    if (attempt > 0) {
+      onRetryStart?.(attempt)
+      await sleep(RETRY_DELAYS_MS[attempt - 1])
+    }
+    try {
+      const result = await translateToSign(text)
+      if (!(result?.data instanceof Blob)) {
+        throw new Error(`Unexpected response shape (${result?.contentType ?? typeof result?.data})`)
+      }
+      return { ok: true, blob: result.data }
+    } catch (error) {
+      lastError = error
+      console.warn(`[App] "${text}" attempt ${attempt + 1}/${MAX_ATTEMPTS} failed:`, error)
+    }
+  }
+  return { ok: false, error: lastError }
+}
 
 function App() {
   const [phase, setPhase] = useState<Phase>('upload')
@@ -18,6 +59,10 @@ function App() {
   const [segments, setSegments] = useState<TranscriptSegment[]>([])
   const [completedCount, setCompletedCount] = useState(0)
   const [failedCount, setFailedCount] = useState(0)
+  const [isRetrying, setIsRetrying] = useState(false)
+  const [isManualRetry, setIsManualRetry] = useState(false)
+  const [manualRetryDone, setManualRetryDone] = useState(0)
+  const [manualRetryTotal, setManualRetryTotal] = useState(0)
 
   const segmentsRef = useRef<TranscriptSegment[]>([])
   segmentsRef.current = segments
@@ -61,24 +106,24 @@ function App() {
 
     let failures = 0
     for (let i = 0; i < enriched.length; i++) {
-      try {
-        const result = await translateToSign(enriched[i].text)
-        if (!(result?.data instanceof Blob)) {
-          throw new Error(`Unexpected response shape (${result?.contentType ?? typeof result?.data})`)
-        }
-        enriched[i].poseUrl = URL.createObjectURL(result.data)
+      setIsRetrying(false)
+      const outcome = await translateSegmentWithRetry(enriched[i].text, () => setIsRetrying(true))
+      setIsRetrying(false)
+      if (outcome.ok) {
+        enriched[i].poseUrl = URL.createObjectURL(await processPoseBlob(outcome.blob))
         enriched[i].status = 'done'
-      } catch (error) {
+      } else {
         enriched[i].status = 'failed'
-        enriched[i].errorMessage = error instanceof Error ? error.message : String(error)
+        enriched[i].errorMessage =
+          outcome.error instanceof Error ? outcome.error.message : String(outcome.error)
         failures++
-        console.error(`[App] Segment ${i + 1} failed:`, error)
+        console.error(`[App] Segment ${i + 1} failed after ${MAX_ATTEMPTS} attempts:`, outcome.error)
       }
       setSegments([...enriched])
       setCompletedCount(i + 1)
       setFailedCount(failures)
       if (i < enriched.length - 1) {
-        await new Promise(resolve => setTimeout(resolve, SEGMENT_DELAY_MS))
+        await sleep(SEGMENT_DELAY_MS)
       }
     }
 
@@ -90,6 +135,48 @@ function App() {
     }
 
     setPhase('player')
+  }
+
+  async function handleRetryFailed() {
+    if (isManualRetry) return
+    const failedIndexes = segmentsRef.current
+      .map((segment, index) => (segment.status === 'failed' ? index : -1))
+      .filter(index => index !== -1)
+    if (failedIndexes.length === 0) return
+
+    setIsManualRetry(true)
+    setManualRetryDone(0)
+    setManualRetryTotal(failedIndexes.length)
+
+    let stillFailed = 0
+    for (const [done, index] of failedIndexes.entries()) {
+      const segment = segmentsRef.current[index]
+      segment.status = 'pending'
+      segment.errorMessage = undefined
+      setSegments([...segmentsRef.current])
+
+      const outcome = await translateSegmentWithRetry(segment.text, () => setIsRetrying(true))
+      setIsRetrying(false)
+      if (outcome.ok) {
+        segment.poseUrl = URL.createObjectURL(await processPoseBlob(outcome.blob))
+        segment.status = 'done'
+      } else {
+        segment.status = 'failed'
+        segment.errorMessage =
+          outcome.error instanceof Error ? outcome.error.message : String(outcome.error)
+        stillFailed++
+        console.error(`[App] Manual retry failed for "${segment.text}":`, outcome.error)
+      }
+      setSegments([...segmentsRef.current])
+      setFailedCount(segmentsRef.current.filter(s => s.status === 'failed').length)
+      setManualRetryDone(done + 1)
+      if (done < failedIndexes.length - 1) {
+        await sleep(SEGMENT_DELAY_MS)
+      }
+    }
+
+    console.warn(`[App] Manual retry finished: ${failedIndexes.length - stillFailed}/${failedIndexes.length} recovered`)
+    setIsManualRetry(false)
   }
 
   function handleBackToUpload() {
@@ -137,7 +224,9 @@ function App() {
           {phase === 'generating' && (
             <div className="space-y-4">
               <p className="text-sm font-medium text-slate-200">
-                Translating {Math.min(completedCount + 1, segments.length)} / {segments.length} segments…
+                Translating {Math.min(completedCount + 1, segments.length)} / {segments.length} segments
+                {isRetrying && <span className="text-amber-400"> (retrying)…</span>}
+                {!isRetrying && '…'}
               </p>
               <div className="h-2 w-full overflow-hidden rounded-full bg-slate-800">
                 <div
@@ -148,13 +237,22 @@ function App() {
               <p className="text-xs text-slate-500">
                 {completedCount} done
                 {failedCount > 0 && <span className="text-red-400"> · {failedCount} failed</span>} · one at a time with
-                a {SEGMENT_DELAY_MS}ms pause between calls
+                a {SEGMENT_DELAY_MS}ms pause between calls · up to {MAX_ATTEMPTS} attempts per segment
+                {isRetrying && <span className="text-amber-400"> · backing off {RETRY_DELAYS_MS.join('/')}ms before retries</span>}
               </p>
             </div>
           )}
 
           {phase === 'player' && videoUrl && (
-            <TranscriptSignPlayer videoUrl={videoUrl} segments={segments} onBack={handleBackToUpload} />
+            <TranscriptSignPlayer
+              videoUrl={videoUrl}
+              segments={segments}
+              onBack={handleBackToUpload}
+              onRetryFailed={handleRetryFailed}
+              manualRetryInProgress={isManualRetry}
+              manualRetryDone={manualRetryDone}
+              manualRetryTotal={manualRetryTotal}
+            />
           )}
         </div>
       </div>

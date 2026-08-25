@@ -1,4 +1,5 @@
 const TIMESTAMP_RE = /^(\d{1,3}):(\d{2})(?::(\d{2}))?(?:\.(\d+))?\s+(.+)$/;
+const NON_SPEECH_RE = /^[[(][^[\]()]*[\])]$/;
 
 function timestampToMs(match) {
   let hours;
@@ -33,8 +34,13 @@ export function parseTranscript(fileText, durationMs = Infinity) {
       continue;
     }
 
+    const text = match[5].trim();
+    if (NON_SPEECH_RE.test(text)) {
+      continue;
+    }
+
     segments.push({
-      text: match[5].trim(),
+      text,
       offsetMs: timestampToMs(match),
       endMs: 0,
     });

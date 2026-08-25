@@ -1,4 +1,4 @@
-import { useEffect, useImperativeHandle, useRef } from 'react'
+import { useEffect, useImperativeHandle, useRef, useState } from 'react'
 import type { Ref } from 'react'
 import { defineCustomElements } from 'pose-viewer/loader'
 
@@ -7,6 +7,7 @@ export interface PoseViewerElement extends HTMLElement {
   width: string
   height: string
   padding: string
+  background: string
   playbackRate: number
   currentTime: number
   duration: number
@@ -14,6 +15,7 @@ export interface PoseViewerElement extends HTMLElement {
   ended: boolean
   loop: boolean
   autoplay: boolean
+  error: unknown
   play(): Promise<void>
   pause(): Promise<void>
   getPose(): Promise<{ body: { fps: number } }>
@@ -54,16 +56,17 @@ interface SignAvatarProps {
   ref?: Ref<SignAvatarHandle>
 }
 
+type AvatarFailure = { kind: 'parse' | 'timeout'; message: string }
+
 const RATE_WARN_MIN = 0.25
 const RATE_WARN_MAX = 8
 
-// One fixed framing for every segment, derived once from the 2–98th percentile
-// bounding boxes of a sample of sign-mt ASL poses (512×512 coordinate space):
-// union bbox x[67.7, 371.6] y[72.2, 540.0] → figure w=0.594 h=0.914 center (0.429, 0.598).
-// Scaled to fill 92% of the panel and recentered; identical for all segments.
-const FIXED_FIT = { txPct: 6.8, tyPct: -10.2, scale: 1.007 }
+// Framing is handled in pose data (src/lib/poseProcess.js normalizes every pose
+// into a centered 80%-height box), so no transform is needed here — the canvas
+// fills the panel exactly and the figure can never overflow it.
+const FIXED_FIT = { txPct: 0, tyPct: 0, scale: 1 }
 
-function SignAvatar({ src, durationMs, startAtMs = 0, loop = false, playing = false, className = 'block aspect-square h-full', ref }: SignAvatarProps) {
+function SignAvatar({ src, durationMs, startAtMs = 0, loop = false, playing = false, className = 'block aspect-square w-full', ref }: SignAvatarProps) {
   const elementRef = useRef<PoseViewerElement>(null)
   const targetMsRef = useRef(durationMs)
   targetMsRef.current = durationMs
@@ -71,6 +74,7 @@ function SignAvatar({ src, durationMs, startAtMs = 0, loop = false, playing = fa
   startAtMsRef.current = startAtMs
   const playingRef = useRef(playing)
   playingRef.current = playing
+  const [failure, setFailure] = useState<AvatarFailure | null>(null)
 
   useImperativeHandle(
     ref,
@@ -90,6 +94,8 @@ function SignAvatar({ src, durationMs, startAtMs = 0, loop = false, playing = fa
     const el = elementRef.current
     if (!el || !src) return
 
+    setFailure(null)
+
     ensurePoseViewerDefined().then(() => {
       if (cancelled) return
       el.autoplay = false
@@ -97,8 +103,31 @@ function SignAvatar({ src, durationMs, startAtMs = 0, loop = false, playing = fa
       el.width = '100%'
       el.height = '100%'
       el.padding = '0%'
+      el.background = '#ffffff'
       el.style.transformOrigin = '0 0'
       el.style.transform = `translate(${FIXED_FIT.txPct}%, ${FIXED_FIT.tyPct}%) scale(${FIXED_FIT.scale})`
+
+      // pose-viewer emits loadedmetadata$ BEFORE assigning `duration` internally,
+      // so listeners always read NaN there — poll until the duration is real instead.
+      let attempts = 0
+      const waitForMetadata = () => {
+        if (cancelled) return
+        if (el.error) {
+          const message = el.error instanceof Error ? el.error.message : String(el.error)
+          console.error(`[SignAvatar] pose failed to load: ${message}`)
+          setFailure({ kind: 'parse', message })
+          return
+        }
+        if (Number.isFinite(el.duration) && el.duration > 0) {
+          applyRateAndPlay()
+          return
+        }
+        if (++attempts > 100) {
+          setFailure({ kind: 'timeout', message: 'pose metadata never became available' })
+          return
+        }
+        setTimeout(waitForMetadata, 50)
+      }
 
       const applyRateAndPlay = () => {
         if (cancelled) return
@@ -128,13 +157,8 @@ function SignAvatar({ src, durationMs, startAtMs = 0, loop = false, playing = fa
         }
       }
 
-      el.addEventListener('loadedmetadata$', applyRateAndPlay, { once: true })
       el.src = src
-      if (Number.isFinite(el.duration) && el.duration > 0) {
-        applyRateAndPlay()
-      }
-
-      return () => undefined
+      waitForMetadata()
     })
 
     return () => {
@@ -163,6 +187,15 @@ function SignAvatar({ src, durationMs, startAtMs = 0, loop = false, playing = fa
     return (
       <div className="flex aspect-video w-full items-center justify-center rounded-lg border border-dashed border-slate-700 bg-slate-800/50 text-sm text-slate-500">
         Sign avatar appears here
+      </div>
+    )
+  }
+
+  if (failure) {
+    return (
+      <div className="flex aspect-video w-full flex-col items-center justify-center gap-1 rounded-lg border border-dashed border-red-900 bg-red-950/30 px-4 text-center text-sm text-red-400">
+        <span>Sign avatar could not be displayed for this segment.</span>
+        <span className="text-xs text-red-500">{failure.message}</span>
       </div>
     )
   }
