@@ -1,4 +1,7 @@
-const ENDPOINT = 'https://us-central1-sign-mt.cloudfunctions.net/spoken_text_to_signed_pose';
+// Browsers send an Origin header that the upstream API rejects with 403.
+// Route through a Vercel serverless proxy (/api/translate) that strips it.
+// In local dev, Vite proxies /api/translate to the same upstream.
+const ENDPOINT = '/api/translate';
 
 const cache = new Map();
 
