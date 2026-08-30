@@ -1,1 +1,12 @@
 @import "tailwindcss";
+
+@theme {
+  --color-mizu: #eaf3fa;
+  --color-ink: #1c3a52;
+  --color-muted: #5a7891;
+  --color-accent: #4a87b3;
+  --color-vermillion: #c9583f;
+  --font-sans: "Inter", sans-serif;
+  --font-serif: "Fraunces", serif;
+  --font-quote: "Source Serif 4", serif;
+}
