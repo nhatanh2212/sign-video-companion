@@ -1,12 +1,25 @@
 @import "tailwindcss";
 
 @theme {
+  --color-paper: #fbf8f3;
+  --color-sky: #eaf3fa;
   --color-mizu: #eaf3fa;
-  --color-ink: #1c3a52;
-  --color-muted: #5a7891;
-  --color-accent: #4a87b3;
-  --color-vermillion: #c9583f;
+  --color-ink: #16324a;
+  --color-muted: #5c6b77;
+  --color-night: #0a121c;
+  --color-vermillion: #c1462e;
+  --color-cta: #0b1f30;
   --font-sans: "Inter", sans-serif;
   --font-serif: "Fraunces", serif;
-  --font-quote: "Source Serif 4", serif;
+}
+
+.grain-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  pointer-events: none;
+  background-image: url("/noise.png");
+  background-repeat: repeat;
+  background-size: 256px 256px;
+  opacity: 0.045;
 }

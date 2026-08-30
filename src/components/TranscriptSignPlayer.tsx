@@ -65,18 +65,18 @@ function TranscriptSignPlayer({
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h2 className="text-lg font-medium">Transcript player</h2>
+        <h2 className="font-serif text-xl font-medium italic text-slate-50">Transcript player</h2>
         <button
           type="button"
           onClick={onBack}
-          className="rounded-lg border border-slate-700 px-3 py-1.5 text-sm font-medium text-slate-300 hover:bg-slate-800"
+          className="rounded-lg border border-[#22374A] bg-[#111E2C] px-3 py-1.5 text-sm font-medium text-[#C7DCEC] hover:bg-[#1C3348]"
         >
           Back to upload
         </button>
       </div>
 
       <div className="grid items-stretch gap-6 md:grid-cols-5">
-        <div className="rounded-xl border border-slate-800 bg-slate-900 p-3 md:col-span-3">
+        <div className="rounded-xl border border-[#22374A] bg-[#111E2C] p-3 md:col-span-3">
           <VideoPlayer
             ref={playerRef}
             src={videoUrl}
@@ -85,7 +85,7 @@ function TranscriptSignPlayer({
           />
         </div>
 
-        <div className="flex items-center justify-center overflow-hidden rounded-xl border border-slate-800 bg-white p-3 md:col-span-2">
+        <div className="flex items-center justify-center overflow-hidden rounded-xl border border-[#22374A] bg-[#111E2C] p-3 md:col-span-2">
           {activeSegment?.status === 'done' && activeSegment.poseUrl ? (
             <SignAvatar
               key={`${activeSegment.offsetMs}-${activeSegment.poseUrl}`}
@@ -101,11 +101,11 @@ function TranscriptSignPlayer({
               className="block aspect-square w-full"
             />
           ) : activeSegment?.status === 'failed' ? (
-            <div className="flex aspect-video w-full items-center justify-center rounded-lg border border-dashed border-red-900 bg-red-950/30 px-4 text-center text-sm text-red-400">
+            <div className="flex aspect-video w-full items-center justify-center rounded-lg border border-dashed border-[#7A2E2E] bg-[#2A1216]/60 px-4 text-center text-sm text-[#E08A8A]">
               Translation failed for this segment — see the transcript list for details.
             </div>
           ) : (
-            <div className="flex aspect-video w-full flex-col items-center justify-center gap-2 rounded-lg border border-dashed border-slate-700 bg-slate-800/50 px-4 text-center text-sm text-slate-500">
+            <div className="flex aspect-video w-full flex-col items-center justify-center gap-2 rounded-lg border border-dashed border-[#22374A] bg-[#0A121C]/40 px-4 text-center text-sm text-[#7C93A8]">
               <span>{isPlaying ? 'No segment at this position' : 'Press play on the video to start the sign avatar'}</span>
               <span className="text-xs">{isPlaying ? '' : 'Avatar plays at segment-matched speed once the video starts'}</span>
             </div>
@@ -113,13 +113,13 @@ function TranscriptSignPlayer({
         </div>
       </div>
 
-      <p className="-mt-3 truncate text-center text-xs text-slate-500">
+      <p className="-mt-3 truncate text-center text-xs text-[#7C93A8]">
         {activeSegment ? `${formatTime(activeSegment.offsetMs)} – ${formatTime(activeSegment.endMs)}` : '—'}
       </p>
 
       {failedCount > 0 && onRetryFailed && (
-        <div className="mx-auto flex w-full max-w-3xl flex-col items-center gap-2 rounded-xl border border-amber-900/60 bg-amber-950/20 px-4 py-3 sm:flex-row sm:justify-between">
-          <p className="text-sm text-amber-300">
+        <div className="mx-auto flex w-full max-w-3xl flex-col items-center gap-2 rounded-xl border border-[#5A4A24]/60 bg-[#241F14]/40 px-4 py-3 sm:flex-row sm:justify-between">
+          <p className="text-sm text-[#E0C08A]">
             {manualRetryInProgress ? (
               <>
                 Retrying failed segments… {manualRetryDone}/{manualRetryTotal} attempted
@@ -135,15 +135,15 @@ function TranscriptSignPlayer({
             type="button"
             onClick={onRetryFailed}
             disabled={manualRetryInProgress}
-            className="shrink-0 rounded-lg bg-amber-600 px-3 py-1.5 text-sm font-medium text-white enabled:cursor-pointer enabled:hover:bg-amber-500 disabled:cursor-not-allowed disabled:opacity-50"
+            className="shrink-0 rounded-lg bg-[#5A4A24] px-3 py-1.5 text-sm font-medium text-white enabled:cursor-pointer enabled:hover:bg-[#6B5930] disabled:cursor-not-allowed disabled:opacity-50"
           >
             {manualRetryInProgress ? 'Retrying…' : `Retry failed segments (${failedCount})`}
           </button>
         </div>
       )}
 
-      <div className="mx-auto w-full max-w-3xl rounded-xl border border-slate-800 bg-slate-900">
-        <ul className="max-h-80 divide-y divide-slate-800 overflow-y-auto">
+      <div className="mx-auto w-full max-w-3xl space-y-2">
+        <ul className="space-y-2">
           {segments.map((segment, index) => {
             const isActive = index === activeIndex
             return (
@@ -151,21 +151,21 @@ function TranscriptSignPlayer({
                 <button
                   type="button"
                   onClick={() => playSegment(segment)}
-                  className={`flex w-full items-start gap-3 px-4 py-2.5 text-left text-sm transition-colors ${
-                    isActive ? 'bg-indigo-950/60' : 'hover:bg-slate-800/60'
+                  className={`flex w-full items-start gap-3 rounded-lg border border-[#22374A] px-4 py-2.5 text-left text-[13px] transition-colors ${
+                    isActive ? 'bg-[#1C3348]' : 'bg-[#111E2C] hover:bg-[#16283A]'
                   }`}
                 >
-                  <span className={`mt-0.5 shrink-0 font-mono text-xs ${isActive ? 'text-indigo-300' : 'text-slate-500'}`}>
+                  <span className={`mt-0.5 shrink-0 font-mono text-[11px] ${isActive ? 'text-[#9FC1DE]' : 'text-[#7C93A8]'}`}>
                     {formatTime(segment.offsetMs)}
                   </span>
-                  <span className={`flex-1 ${isActive ? 'text-white' : 'text-slate-300'}`}>{segment.text}</span>
+                  <span className={`flex-1 ${isActive ? 'font-medium text-white' : 'text-[#D6E1EB]'}`}>{segment.text}</span>
                   {segment.status === 'done' && (
-                    <span className="shrink-0 text-xs text-emerald-500" title="Translation ready">
+                    <span className="shrink-0 text-xs text-[#4C8C6B]" title="Translation ready">
                       ✓
                     </span>
                   )}
                   {segment.status === 'failed' && (
-                    <span className="shrink-0 text-xs font-medium text-red-400" title={segment.errorMessage}>
+                    <span className="shrink-0 text-xs font-medium text-[#E08A8A]" title={segment.errorMessage}>
                       failed
                     </span>
                   )}

@@ -90,7 +90,7 @@ function VideoPlayer({ src, ref, onTimeUpdate, onLoadedMetadata, onPlay, onPause
 
   if (!src) {
     return (
-      <div className="flex aspect-video w-full items-center justify-center rounded-lg border border-dashed border-slate-700 bg-slate-800/50 text-sm text-slate-500">
+      <div className="flex aspect-video w-full items-center justify-center rounded-lg border border-dashed border-[#22374A] bg-[#0A121C]/40 text-sm text-[#7C93A8]">
         Upload a video to preview it here
       </div>
     )

@@ -9,6 +9,7 @@ export default defineConfig({
     proxy: {
       '/api/translate': {
         target: 'https://us-central1-sign-mt.cloudfunctions.net',
+        changeOrigin: true,
         rewrite: () => '/spoken_text_to_signed_pose',
         configure: (proxy) => {
           proxy.on('proxyReq', (proxyReq) => {

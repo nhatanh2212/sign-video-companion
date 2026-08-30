@@ -188,89 +188,101 @@ function SignApp() {
   }
 
   return (
-    <div className="relative flex min-h-screen flex-col bg-slate-950 text-slate-100">
+    <div className="relative flex min-h-screen flex-col overflow-hidden bg-[#0A121C] text-slate-100">
+      <div
+        className="pointer-events-none absolute inset-0"
+        style={{
+          background:
+            'radial-gradient(circle at 80% 10%, rgba(59,125,216,0.28) 0%, rgba(6,11,18,0) 60%)',
+        }}
+        aria-hidden="true"
+      />
       <a
         href="/"
-        className="absolute left-5 top-5 z-10 inline-flex items-center gap-2 rounded-lg border border-slate-800 bg-slate-900/70 px-3 py-2 text-sm font-medium text-slate-300 backdrop-blur transition-colors hover:text-white hover:border-slate-700"
+        className="absolute left-5 top-5 z-10 inline-flex items-center gap-2 text-[13px] font-medium text-[#C7DCEC] transition-colors hover:text-white"
       >
         <span aria-hidden="true">‹</span> Sign Video Companion
       </a>
 
-      <main className="flex flex-1 flex-col px-4 py-10 sm:px-6 lg:px-8">
+      <main className="relative flex flex-1 flex-col px-4 py-10 sm:px-6 lg:px-8">
         <div className="flex w-full flex-1 justify-center">
-          <div className="mt-6 w-full max-w-7xl space-y-8">
-            <div className="rounded-2xl border border-slate-800 bg-slate-900 p-6 shadow-xl sm:p-8">
-              <div className="flex items-start justify-between gap-4">
-                <div>
-                  <h1 className="mb-2 text-2xl font-semibold tracking-tight">Sign Video Companion</h1>
-                  <p className="mb-8 text-sm text-slate-400">
-                    Upload a video and a plain-text transcript to play a synced sign-language avatar alongside it.
-                  </p>
-                </div>
-              </div>
-
-              {phase === 'upload' && (
-                <div className="space-y-6">
-                  <div className="mx-auto w-full max-w-xl space-y-6">
-                    <FileUpload onVideoSelect={setVideoUrl} onTranscriptSelect={setTranscriptText} />
-                    <button
-                      type="button"
-                      disabled={!canGenerate}
-                      onClick={handleGenerate}
-                      className="w-full rounded-lg bg-indigo-600 px-4 py-2.5 text-sm font-medium text-white enabled:cursor-pointer enabled:hover:bg-indigo-500 disabled:cursor-not-allowed disabled:opacity-50"
-                    >
-                      Generate translations
-                    </button>
-                    <p className="text-xs text-slate-500">
-                      {canGenerate
-                        ? `Ready: ${transcriptText.trim().split(/\r?\n/).filter(Boolean).length} transcript lines detected.`
-                        : 'Select both a video and a transcript to continue. Waiting for video metadata…'}
+          <div className="mt-16 w-full max-w-7xl space-y-8">
+            {phase === 'upload' && (
+              <div className="space-y-6">
+                <div className="mx-auto w-full max-w-xl space-y-8">
+                  <div className="space-y-2">
+                    <h1 className="font-serif text-[27px] font-medium italic leading-snug text-slate-50">
+                      Bring your video to life.
+                    </h1>
+                    <p className="text-[13px] text-[#7C93A8]">
+                      Upload a video and its transcript to get started.
                     </p>
                   </div>
-                  <div className="rounded-xl border border-slate-800 bg-slate-900 p-3">
-                    <VideoPlayer src={videoUrl} onLoadedMetadata={s => setVideoDurationMs(s * 1000)} />
-                  </div>
-                </div>
-              )}
 
-              {phase === 'generating' && (
-                <div className="space-y-4">
-                  <p className="text-sm font-medium text-slate-200">
-                    Translating {Math.min(completedCount + 1, segments.length)} / {segments.length} segments
-                    {isRetrying && <span className="text-amber-400"> (retrying)…</span>}
-                    {!isRetrying && '…'}
-                  </p>
-                  <div className="h-2 w-full overflow-hidden rounded-full bg-slate-800">
-                    <div
-                      className="h-full rounded-full bg-indigo-500 transition-all duration-300"
-                      style={{ width: `${segments.length ? (completedCount / segments.length) * 100 : 0}%` }}
-                    />
-                  </div>
-                  <p className="text-xs text-slate-500">
-                    {completedCount} done
-                    {failedCount > 0 && <span className="text-red-400"> · {failedCount} failed</span>} · one at a time with
-                    a {SEGMENT_DELAY_MS}ms pause between calls · up to {MAX_ATTEMPTS} attempts per segment
-                    {isRetrying && <span className="text-amber-400"> · backing off {RETRY_DELAYS_MS.join('/')}ms before retries</span>}
+                  <FileUpload onVideoSelect={setVideoUrl} onTranscriptSelect={setTranscriptText} />
+
+                  <button
+                    type="button"
+                    disabled={!canGenerate}
+                    onClick={handleGenerate}
+                    className="w-full rounded-full bg-[#EAF3FA] px-4 py-2.5 text-sm font-medium text-[#0B1F30] enabled:cursor-pointer enabled:hover:bg-white disabled:cursor-not-allowed disabled:opacity-40"
+                  >
+                    Generate translations
+                  </button>
+                  <p className="text-center text-xs text-[#7C93A8]">
+                    {canGenerate
+                      ? `Ready: ${transcriptText.trim().split(/\r?\n/).filter(Boolean).length} transcript lines detected.`
+                      : 'Select both files to continue.'}
                   </p>
                 </div>
-              )}
 
-              {phase === 'player' && videoUrl && (
-                <TranscriptSignPlayer
-                  videoUrl={videoUrl}
-                  segments={segments}
-                  onBack={handleBackToUpload}
-                  onRetryFailed={handleRetryFailed}
-                  manualRetryInProgress={isManualRetry}
-                  manualRetryDone={manualRetryDone}
-                  manualRetryTotal={manualRetryTotal}
-                />
-              )}
-            </div>
+                <div className="mx-auto w-full max-w-3xl rounded-xl border border-[#22374A] bg-[#111E2C] p-3">
+                  <VideoPlayer src={videoUrl} onLoadedMetadata={s => setVideoDurationMs(s * 1000)} />
+                </div>
+              </div>
+            )}
+
+            {phase === 'generating' && (
+              <div className="mx-auto w-full max-w-xl space-y-4">
+                <p className="text-sm font-medium text-slate-200">
+                  Translating {Math.min(completedCount + 1, segments.length)} / {segments.length} segments
+                  {isRetrying && <span className="text-amber-400"> (retrying)…</span>}
+                  {!isRetrying && '…'}
+                </p>
+                <div className="h-2 w-full overflow-hidden rounded-full bg-[#111E2C]">
+                  <div
+                    className="h-full rounded-full bg-[#3E7FC4] transition-all duration-300"
+                    style={{ width: `${segments.length ? (completedCount / segments.length) * 100 : 0}%` }}
+                  />
+                </div>
+                <p className="text-xs text-[#7C93A8]">
+                  {completedCount} / {segments.length} segments
+                  {failedCount > 0 && (
+                    <>
+                      {' '}
+                      · <span className="text-[#E08A8A]">{failedCount} failed</span>
+                    </>
+                  )}
+                  {isRetrying && <span className="text-[#E0C08A]"> · retrying</span>}
+                </p>
+              </div>
+            )}
+
+            {phase === 'player' && videoUrl && (
+              <TranscriptSignPlayer
+                videoUrl={videoUrl}
+                segments={segments}
+                onBack={handleBackToUpload}
+                onRetryFailed={handleRetryFailed}
+                manualRetryInProgress={isManualRetry}
+                manualRetryDone={manualRetryDone}
+                manualRetryTotal={manualRetryTotal}
+              />
+            )}
           </div>
         </div>
 
-        <footer className="mt-10 text-center text-xs text-slate-600">
+        <footer className="relative mt-10 text-center text-xs text-slate-600">
           Sign language translation powered by{' '}
           <a
             href="https://rylo.com/sign/translate/"

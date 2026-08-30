@@ -21,7 +21,12 @@ function App() {
     setRoute(resolveRoute())
   }, [])
 
-  return route === '/app' ? <SignApp /> : <LandingPage onNavigate={navigate} />
+  return (
+    <>
+      <div className="grain-overlay" aria-hidden="true" />
+      {route === '/app' ? <SignApp /> : <LandingPage onNavigate={navigate} />}
+    </>
+  )
 }
 
 export default App
