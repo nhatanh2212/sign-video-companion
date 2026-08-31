@@ -73,71 +73,6 @@ function GoToApp({ onNavigate }: { onNavigate?: (to: string) => void }) {
   )
 }
 
-function AppShot() {
-  return (
-    <figure
-      className="lp-appshot"
-      role="img"
-      aria-label="The Sign Video Companion player showing a video alongside its transcript, each line translated into signed moments"
-    >
-      <div className="lp-appshot__bar">
-        <span className="lp-appshot__dot lp-appshot__dot--red" aria-hidden="true" />
-        <span className="lp-appshot__dot lp-appshot__dot--amber" aria-hidden="true" />
-        <span className="lp-appshot__dot lp-appshot__dot--green" aria-hidden="true" />
-        <span className="lp-appshot__title">Sign Video Companion — player</span>
-      </div>
-
-      <div className="lp-appshot__body">
-        <div className="lp-appshot__video">
-          <span className="lp-appshot__play" aria-hidden="true">
-            ▶
-          </span>
-          <div className="lp-appshot__track" aria-hidden="true">
-            <div className="lp-appshot__fill" />
-            <span className="lp-appshot__scrub" />
-          </div>
-        </div>
-
-        <div className="lp-appshot__rows">
-          <div className="lp-appshot__row">
-            <span className="lp-appshot__time">00:00</span>
-            <span className="lp-appshot__text">The day I decided to try this.</span>
-            <span className="lp-appshot__status lp-appshot__status--ok">ready</span>
-          </div>
-          <div className="lp-appshot__row">
-            <span className="lp-appshot__time">00:24</span>
-            <span className="lp-appshot__text">I recorded a short video.</span>
-            <span className="lp-appshot__status lp-appshot__status--ok">ready</span>
-          </div>
-          <div className="lp-appshot__row lp-appshot__row--active">
-            <span className="lp-appshot__time">01:12</span>
-            <span className="lp-appshot__text">Click generate, and watch.</span>
-            <span className="lp-appshot__status lp-appshot__status--play">► playing</span>
-          </div>
-          <div className="lp-appshot__row">
-            <span className="lp-appshot__time">01:40</span>
-            <span className="lp-appshot__text">Every sentence is its own moment.</span>
-            <span className="lp-appshot__status lp-appshot__status--ok">ready</span>
-          </div>
-        </div>
-      </div>
-
-      <div className="lp-appshot__ticker" aria-hidden="true">
-        <span className="lp-appshot__tick" />
-        <span className="lp-appshot__tick" />
-        <span className="lp-appshot__tick" />
-        <span className="lp-appshot__tick" />
-        <span className="lp-appshot__tick lp-appshot__tick--active" />
-        <span className="lp-appshot__tick" />
-        <span className="lp-appshot__tick" />
-        <span className="lp-appshot__tick" />
-        <span className="lp-appshot__tick" />
-        <span className="lp-appshot__tick" />
-      </div>
-    </figure>
-  )
-}
-
 function LandingPage({ onNavigate }: { onNavigate?: (to: string) => void }) {
   const goToApp = () => onNavigate?.('/app')
 
@@ -161,17 +96,65 @@ function LandingPage({ onNavigate }: { onNavigate?: (to: string) => void }) {
   return (
     <div className="lp">
 
-      {/* 1. HERO */}
+      {/* 1. HERO — centered layout */}
       <section id="hero" className="lp-hero">
-        <div className="lp-hero__photo" aria-hidden="true" />
         <div className="lp-hero__glow" aria-hidden="true" />
         <div className="lp-wrap lp-hero__inner lp-fade" data-fade>
-          <h1 className="lp-hero__title">Sign video companion.</h1>
+          <h1 className="lp-hero__title">
+            Sign <em>Video</em> Companion
+          </h1>
+          <p className="lp-hero__sub">
+            For every video that deserves a sign-language interpretation.
+          </p>
           <GoToApp onNavigate={onNavigate} />
+          <span className="lp-hero__caption">No sign-up needed</span>
         </div>
-        <div className="lp-wrap lp-hero__bottom">
-          <div className="lp-hero__divider" aria-hidden="true" />
-          <p className="lp-hero__scroll">Scroll to see how it works ↓</p>
+
+        {/* Screenshot showcase — browser-frame mockup */}
+        <div className="lp-wrap lp-hero__showcase">
+          <figure
+            className="lp-hero__frame"
+            role="img"
+            aria-label="Sign Video Companion app showing a video player alongside translated sign-language moments"
+          >
+            <div className="lp-hero__frame-bar">
+              <span className="lp-hero__frame-dot lp-hero__frame-dot--red" aria-hidden="true" />
+              <span className="lp-hero__frame-dot lp-hero__frame-dot--yellow" aria-hidden="true" />
+              <span className="lp-hero__frame-dot lp-hero__frame-dot--green" aria-hidden="true" />
+              <span className="lp-hero__frame-label">Sign Video Companion</span>
+            </div>
+            <div className="lp-hero__frame-body">
+              {/* TODO: Replace this mock with the real app screenshot (screenshot-app-1440.png).
+                  The image file exists at the project root. Once ready, swap the inner
+                  mockup div for: <img src="/screenshot-app-1440.png" alt="..." /> */}
+              <div className="lp-hero__frame-mock">
+                <div className="lp-hero__frame-mock-video">
+                  <span className="lp-hero__frame-mock-play" aria-hidden="true">▶</span>
+                  <div className="lp-hero__frame-mock-track" aria-hidden="true">
+                    <div className="lp-hero__frame-mock-fill" />
+                  </div>
+                </div>
+                <div className="lp-hero__frame-mock-side">
+                  <div className="lp-hero__frame-mock-row">
+                    <span className="lp-hero__frame-mock-time">00:00</span>
+                    <span className="lp-hero__frame-mock-text">The day I decided to try this.</span>
+                  </div>
+                  <div className="lp-hero__frame-mock-row">
+                    <span className="lp-hero__frame-mock-time">00:24</span>
+                    <span className="lp-hero__frame-mock-text">I recorded a short video.</span>
+                  </div>
+                  <div className="lp-hero__frame-mock-row lp-hero__frame-mock-row--active">
+                    <span className="lp-hero__frame-mock-time">01:12</span>
+                    <span className="lp-hero__frame-mock-text">Click generate, and watch.</span>
+                  </div>
+                  <div className="lp-hero__frame-mock-row">
+                    <span className="lp-hero__frame-mock-time">01:40</span>
+                    <span className="lp-hero__frame-mock-text">Every sentence is its own moment.</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </figure>
         </div>
       </section>
 
@@ -277,17 +260,8 @@ function LandingPage({ onNavigate }: { onNavigate?: (to: string) => void }) {
         </div>
       </section>
 
-      {/* 8. WHAT IT LOOKS LIKE TODAY */}
-      <NumberedSection id="product" bg="sky" num="05" heading="What it looks like today">
-        <p className="lp-body">
-          Upload a video. Upload its transcript. Click generate. Watch a sign-language
-          interpretation appear alongside your video, broken into clickable moments.
-        </p>
-        <AppShot />
-      </NumberedSection>
-
       {/* 9. WHAT'S NEXT */}
-      <NumberedSection id="next" bg="paper" num="06" heading="What&rsquo;s next">
+      <NumberedSection id="next" bg="sky" num="05" heading="What&rsquo;s next">
         <p className="lp-body">
           Put this in front of Deaf and hard-of-hearing users first. Then support videos without
           existing captions. Then decide — based on that feedback, not assumption — whether this
